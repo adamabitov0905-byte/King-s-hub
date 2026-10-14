@@ -13,7 +13,7 @@ from threading import Thread
 # ==========================================
 DISCORD_TOKEN = "MTU1OTg1MDY3MjAyMTcwMDYwOA.G567qa.VSWWkTWN7cRakBzU4Xdi-vObPTAW6ldCtrjap0"
 GITHUB_TOKEN  = "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"
-GITHUB_REPO   = "adamabitov0905-byte/king's hub"
+GITHUB_REPO   = "adamabitov0905-byte/king-s-hub"
 OWNER_ID      = 1496466575052636211    # ← вставь свой Discord ID (число БЕЗ кавычек)
 # ==========================================
 
