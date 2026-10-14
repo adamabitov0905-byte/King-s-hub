@@ -8,15 +8,12 @@ import base64
 from flask import Flask
 from threading import Thread
 
-# ============ НАСТРОЙКИ ============
 # Токены берутся из GitHub Secrets (не пиши их сюда!)
-DISCORD_TOKEN = os.environ.get("MTU1OTg1MDY3MjAyMTcwMDYwOA.G567qa.VSWWkTWN7cRakBzU4Xdi-vObPTAW6ldCtrjap0")
-GITHUB_TOKEN  = os.environ.get("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)
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
+GITHUB_TOKEN  = os.environ.get("GITHUB_TOKEN")
 GITHUB_REPO   = "adamabitov0905-byte/King-s-hub"
-OWNER_ID      = int(os.environ.get("OWNER_ID", 1496466575052636211))
-# ===================================
+OWNER_ID      = int(os.environ.get("OWNER_ID", 0))
 
-# --- Мини веб-сервер (чтобы Render/хостинг видел что бот живой) ---
 app = Flask('')
 
 @app.route('/')
@@ -31,7 +28,6 @@ def keep_alive():
     t = Thread(target=run_web)
     t.daemon = True
     t.start()
-# -----------------------------------------------------------------
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -63,85 +59,72 @@ def save_keys(data):
 
 @bot.event
 async def on_ready():
-    print(f"✅ Бот {bot.user} готов!")
-    print(f"👤 Владелец ID: {OWNER_ID}")
-    print("Напиши !help в Discord")
+    print(f"OK: {bot.user}")
+    print(f"Owner ID: {OWNER_ID}")
 
 @bot.command()
 async def help(ctx):
     await ctx.send(
-        "**👑 King's Hub Bot**\n"
-        "`!addkey <HWID> <дни>` — добавить ключ\n"
-        "`!removekey <HWID>` — удалить ключ\n"
-        "`!list` — список всех ключей\n"
-        "`!check <HWID>` — проверить статус\n"
-        "`!stats` — сколько пользователей"
+        "**King's Hub Bot**\n"
+        "`!addkey <HWID> <дни>`\n"
+        "`!removekey <HWID>`\n"
+        "`!list`\n"
+        "`!check <HWID>`\n"
+        "`!stats`"
     )
 
 @bot.command()
 async def addkey(ctx, hwid: str, days: int = 36500):
-    if ctx.author.id != OWNER_ID:
-        return
+    if ctx.author.id != OWNER_ID: return
     data = load_keys()
-    exp = int(time.time()) + days * 86400
-    data["keys"][hwid] = {"expires": exp, "name": str(ctx.author)}
+    data["keys"][hwid] = {"expires": int(time.time()) + days * 86400, "name": str(ctx.author)}
     if save_keys(data):
-        await ctx.send(f"✅ HWID `{hwid}` добавлен на **{days}** дней")
+        await ctx.send(f"OK: `{hwid}` на **{days}** дней")
     else:
-        await ctx.send("❌ Ошибка сохранения в GitHub")
+        await ctx.send("FAIL: сохранение")
 
 @bot.command()
 async def removekey(ctx, hwid: str):
-    if ctx.author.id != OWNER_ID:
-        return
+    if ctx.author.id != OWNER_ID: return
     data = load_keys()
     if hwid in data["keys"]:
         del data["keys"][hwid]
         save_keys(data)
-        await ctx.send(f"🗑 HWID `{hwid}` удалён")
+        await ctx.send(f"Удалён: `{hwid}`")
     else:
-        await ctx.send("❌ HWID не найден")
+        await ctx.send("Не найден")
 
 @bot.command()
 async def list(ctx):
-    if ctx.author.id != OWNER_ID:
-        return
+    if ctx.author.id != OWNER_ID: return
     data = load_keys()
     if not data["keys"]:
-        await ctx.send("📭 Список пуст")
-        return
-    txt = "**📋 Активные HWID:**\n"
+        await ctx.send("Пусто"); return
+    txt = "**Активные:**\n"
     for hwid, info in data["keys"].items():
-        exp = info["expires"]
-        left = max(0, exp - int(time.time()))
-        days = left // 86400
-        txt += f"`{hwid}` — **{days}** дней\n"
+        days = max(0, info["expires"] - int(time.time())) // 86400
+        txt += f"`{hwid}` — {days} дн.\n"
     await ctx.send(txt)
 
 @bot.command()
 async def check(ctx, hwid: str):
-    if ctx.author.id != OWNER_ID:
-        return
+    if ctx.author.id != OWNER_ID: return
     data = load_keys()
     info = data["keys"].get(hwid)
     if not info:
-        await ctx.send("❌ Нет доступа")
-        return
-    left = max(0, info["expires"] - int(time.time()))
-    await ctx.send(f"✅ Доступ активен, осталось **{left // 86400}** дней")
+        await ctx.send("Нет доступа"); return
+    days = max(0, info["expires"] - int(time.time())) // 86400
+    await ctx.send(f"Осталось: **{days}** дней")
 
 @bot.command()
 async def stats(ctx):
-    if ctx.author.id != OWNER_ID:
-        return
+    if ctx.author.id != OWNER_ID: return
     data = load_keys()
-    await ctx.send(f"👥 Всего пользователей: **{len(data['keys'])}**")
+    await ctx.send(f"Всего: **{len(data['keys'])}**")
 
-# --- Запуск ---
 if __name__ == "__main__":
     keep_alive()
     try:
         bot.run(DISCORD_TOKEN)
     except Exception as e:
-        print(f"❌ Ошибка запуска: {e}")
-        print("Проверь DISCORD_TOKEN в GitHub Secrets!")
+        print(f"Ошибка: {e}")
