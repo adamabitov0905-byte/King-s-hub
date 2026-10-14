@@ -8,16 +8,15 @@ import base64
 from flask import Flask
 from threading import Thread
 
-# ==========================================
-# ВСТАВЬ СВОИ ЗНАЧЕНИЯ СЮДА (замени "..."):
-# ==========================================
-DISCORD_TOKEN = "MTU1OTg1MDY3MjAyMTcwMDYwOA.G567qa.VSWWkTWN7cRakBzU4Xdi-vObPTAW6ldCtrjap0"
-GITHUB_TOKEN  = "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"
-GITHUB_REPO   = "adamabitov0905-byte/king-s-hub"
-OWNER_ID      = 1496466575052636211    # ← вставь свой Discord ID (число БЕЗ кавычек)
-# ==========================================
+# ============ НАСТРОЙКИ ============
+# Токены берутся из GitHub Secrets (не пиши их сюда!)
+DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
+GITHUB_TOKEN  = os.environ.get("GITHUB_TOKEN")
+GITHUB_REPO   = "adamabitov0905-byte/King-s-hub"
+OWNER_ID      = int(os.environ.get("OWNER_ID", 0))
+# ===================================
 
-# --- Мини-веб-сервер для Render (чтобы бот не засыпал) ---
+# --- Мини веб-сервер (чтобы Render/хостинг видел что бот живой) ---
 app = Flask('')
 
 @app.route('/')
@@ -32,7 +31,7 @@ def keep_alive():
     t = Thread(target=run_web)
     t.daemon = True
     t.start()
-# --------------------------------------------------------
+# -----------------------------------------------------------------
 
 bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
 
@@ -43,7 +42,7 @@ def load_keys():
         if r.status_code == 200:
             return r.json()
     except Exception as e:
-        print(f"[!] Ошибка загрузки: {e}")
+        print(f"[!] Load error: {e}")
     return {"keys": {}}
 
 def save_keys(data):
@@ -59,7 +58,7 @@ def save_keys(data):
         r = requests.put(url, headers=headers, json=payload)
         return r.status_code in (200, 201)
     except Exception as e:
-        print(f"[!] Ошибка сохранения: {e}")
+        print(f"[!] Save error: {e}")
         return False
 
 @bot.event
@@ -80,7 +79,7 @@ async def help(ctx):
     )
 
 @bot.command()
-async def addkey(ctx, hwid: str, days: int = 7):
+async def addkey(ctx, hwid: str, days: int = 36500):
     if ctx.author.id != OWNER_ID:
         return
     data = load_keys()
@@ -145,3 +144,4 @@ if __name__ == "__main__":
         bot.run(DISCORD_TOKEN)
     except Exception as e:
         print(f"❌ Ошибка запуска: {e}")
+        print("Проверь DISCORD_TOKEN в GitHub Secrets!")
