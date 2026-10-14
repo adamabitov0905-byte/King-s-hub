@@ -10,10 +10,10 @@ from threading import Thread
 
 # ============ НАСТРОЙКИ ============
 # Токены берутся из GitHub Secrets (не пиши их сюда!)
-DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-GITHUB_TOKEN  = os.environ.get("GITHUB_TOKEN")
+DISCORD_TOKEN = os.environ.get("MTU1OTg1MDY3MjAyMTcwMDYwOA.G567qa.VSWWkTWN7cRakBzU4Xdi-vObPTAW6ldCtrjap0")
+GITHUB_TOKEN  = os.environ.get("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)
 GITHUB_REPO   = "adamabitov0905-byte/King-s-hub"
-OWNER_ID      = int(os.environ.get("OWNER_ID", 0))
+OWNER_ID      = int(os.environ.get("OWNER_ID", 1496466575052636211))
 # ===================================
 
 # --- Мини веб-сервер (чтобы Render/хостинг видел что бот живой) ---
