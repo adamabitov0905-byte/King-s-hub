@@ -10,10 +10,16 @@ from threading import Thread
 
 # Токены берутся из GitHub Secrets (не пиши их сюда!)
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
-GITHUB_TOKEN  = os.environ.get("GITHUB_TOKEN")
+GITHUB_TOKEN  = os.environ.get("GH_TOKEN")
 GITHUB_REPO   = "adamabitov0905-byte/King-s-hub"
-OWNER_ID      = int(os.environ.get("OWNER_ID", 0))
 
+# Защита от пустого OWNER_ID
+try:
+    OWNER_ID = int(os.environ.get("OWNER_ID", "0") or "0")
+except:
+    OWNER_ID = 0
+
+# Мини-сервер для хостинга
 app = Flask('')
 
 @app.route('/')
@@ -65,66 +71,76 @@ async def on_ready():
 @bot.command()
 async def help(ctx):
     await ctx.send(
-        "**King's Hub Bot**\n"
-        "`!addkey <HWID> <дни>`\n"
-        "`!removekey <HWID>`\n"
-        "`!list`\n"
-        "`!check <HWID>`\n"
-        "`!stats`"
+        "**👑 King's Hub Bot**\n"
+        "`!addkey <HWID> <дни>` — добавить ключ\n"
+        "`!removekey <HWID>` — удалить\n"
+        "`!list` — список ключей\n"
+        "`!check <HWID>` — проверить\n"
+        "`!stats` — количество"
     )
 
 @bot.command()
 async def addkey(ctx, hwid: str, days: int = 36500):
-    if ctx.author.id != OWNER_ID: return
+    if ctx.author.id != OWNER_ID:
+        return
     data = load_keys()
-    data["keys"][hwid] = {"expires": int(time.time()) + days * 86400, "name": str(ctx.author)}
+    exp = int(time.time()) + days * 86400
+    data["keys"][hwid] = {"expires": exp, "name": str(ctx.author)}
     if save_keys(data):
-        await ctx.send(f"OK: `{hwid}` на **{days}** дней")
+        await ctx.send(f"✅ HWID `{hwid}` добавлен на **{days}** дней")
     else:
-        await ctx.send("FAIL: сохранение")
+        await ctx.send("❌ Ошибка сохранения в GitHub")
 
 @bot.command()
 async def removekey(ctx, hwid: str):
-    if ctx.author.id != OWNER_ID: return
+    if ctx.author.id != OWNER_ID:
+        return
     data = load_keys()
     if hwid in data["keys"]:
         del data["keys"][hwid]
         save_keys(data)
-        await ctx.send(f"Удалён: `{hwid}`")
+        await ctx.send(f"🗑 HWID `{hwid}` удалён")
     else:
-        await ctx.send("Не найден")
+        await ctx.send("❌ HWID не найден")
 
 @bot.command()
 async def list(ctx):
-    if ctx.author.id != OWNER_ID: return
+    if ctx.author.id != OWNER_ID:
+        return
     data = load_keys()
     if not data["keys"]:
-        await ctx.send("Пусто"); return
-    txt = "**Активные:**\n"
+        await ctx.send("📭 Список пуст")
+        return
+    txt = "**📋 Активные HWID:**\n"
     for hwid, info in data["keys"].items():
-        days = max(0, info["expires"] - int(time.time())) // 86400
-        txt += f"`{hwid}` — {days} дн.\n"
+        exp = info["expires"]
+        left = max(0, exp - int(time.time()))
+        days = left // 86400
+        txt += f"`{hwid}` — **{days}** дней\n"
     await ctx.send(txt)
 
 @bot.command()
 async def check(ctx, hwid: str):
-    if ctx.author.id != OWNER_ID: return
+    if ctx.author.id != OWNER_ID:
+        return
     data = load_keys()
     info = data["keys"].get(hwid)
     if not info:
-        await ctx.send("Нет доступа"); return
-    days = max(0, info["expires"] - int(time.time())) // 86400
-    await ctx.send(f"Осталось: **{days}** дней")
+        await ctx.send("❌ Нет доступа")
+        return
+    left = max(0, info["expires"] - int(time.time()))
+    await ctx.send(f"✅ Доступ активен, осталось **{left // 86400}** дней")
 
 @bot.command()
 async def stats(ctx):
-    if ctx.author.id != OWNER_ID: return
+    if ctx.author.id != OWNER_ID:
+        return
     data = load_keys()
-    await ctx.send(f"Всего: **{len(data['keys'])}**")
+    await ctx.send(f"👥 Всего пользователей: **{len(data['keys'])}**")
 
 if __name__ == "__main__":
     keep_alive()
     try:
         bot.run(DISCORD_TOKEN)
     except Exception as e:
-        print(f"Ошибка: {e}")
+        print(f"❌ Ошибка запуска: {e}")
