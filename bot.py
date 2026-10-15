@@ -8,18 +8,15 @@ import base64
 from flask import Flask
 from threading import Thread
 
-# Токены берутся из GitHub Secrets (не пиши их сюда!)
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 GITHUB_TOKEN  = os.environ.get("GH_TOKEN")
 GITHUB_REPO   = "adamabitov0905-byte/King-s-hub"
 
-# Защита от пустого OWNER_ID
 try:
     OWNER_ID = int(os.environ.get("OWNER_ID", "0") or "0")
 except:
     OWNER_ID = 0
 
-# Мини-сервер для хостинга
 app = Flask('')
 
 @app.route('/')
@@ -35,7 +32,9 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-bot = commands.Bot(command_prefix="!", intents=discord.Intents.all())
+# Отключаем встроенную help, чтобы не конфликтовала
+intents = discord.Intents.all()
+bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 def load_keys():
     url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/Keys.json"
@@ -68,8 +67,8 @@ async def on_ready():
     print(f"OK: {bot.user}")
     print(f"Owner ID: {OWNER_ID}")
 
-@bot.command()
-async def help(ctx):
+@bot.command(name="help")
+async def help_cmd(ctx):
     await ctx.send(
         "**👑 King's Hub Bot**\n"
         "`!addkey <HWID> <дни>` — добавить ключ\n"
@@ -104,7 +103,7 @@ async def removekey(ctx, hwid: str):
         await ctx.send("❌ HWID не найден")
 
 @bot.command()
-async def list(ctx):
+async def list_keys(ctx):
     if ctx.author.id != OWNER_ID:
         return
     data = load_keys()
