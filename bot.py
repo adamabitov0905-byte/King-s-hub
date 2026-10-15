@@ -11,11 +11,7 @@ from threading import Thread
 DISCORD_TOKEN = os.environ.get("DISCORD_TOKEN")
 GITHUB_TOKEN  = os.environ.get("GH_TOKEN")
 GITHUB_REPO   = "adamabitov0905-byte/King-s-hub"
-
-try:
-    OWNER_ID = int(os.environ.get("OWNER_ID", "0") or "0")
-except:
-    OWNER_ID = 0
+OWNER_ID      = 1496466575052636211  # твой Discord ID
 
 app = Flask('')
 
@@ -32,9 +28,7 @@ def keep_alive():
     t.daemon = True
     t.start()
 
-# Отключаем встроенную help, чтобы не конфликтовала
-intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
+bot = commands.Bot(command_prefix="!", intents=discord.Intents.all(), help_command=None)
 
 def load_keys():
     url = f"https://raw.githubusercontent.com/{GITHUB_REPO}/main/Keys.json"
@@ -102,7 +96,7 @@ async def removekey(ctx, hwid: str):
     else:
         await ctx.send("❌ HWID не найден")
 
-@bot.command()
+@bot.command(name="list")
 async def list_keys(ctx):
     if ctx.author.id != OWNER_ID:
         return
