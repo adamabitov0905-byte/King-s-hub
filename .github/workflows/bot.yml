@@ -3,12 +3,18 @@ name: Run Discord Bot
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */5 * * *'  # запуск каждые 5 часов
+    # Запуск каждые 4 часа
+    - cron: '0 */4 * * *'
+
+# Отменяет предыдущий запуск при появлении нового (чтобы не было 2 ботов)
+concurrency:
+  group: discord-bot-live
+  cancel-in-progress: true
 
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    timeout-minutes: 350  # 5 часов 50 минут (меньше 6-часового лимита)
+    timeout-minutes: 355  # 5 часов 55 минут — максимум
 
     steps:
     - uses: actions/checkout@v4
